@@ -1,20 +1,29 @@
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-const secret = process.env.JWT_SECRET;
+const authMiddleware = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
 
-const WithAuth = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: "Token não fornecido" });
+  }
 
-  if (!token)
-    return res.status(401).json({ error: 'Sem token, acesso negado' });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err) return res.status(401).json({ error: 'Token inválido' });
+    req.user = {
+      _id: decoded.userId,
+      email: decoded.email,
+    };
 
-    req.email = decoded.email;
     next();
-  });
+  } catch (error) {
+    console.error("Erro na verificação do token:", error.message);
+    res.status(401).json({
+      error: "Token inválido",
+      details: process.env.NODE_ENV === "development" ? error.message : null,
+    });
+  }
 };
 
-module.exports = WithAuth;
+module.exports = authMiddleware;

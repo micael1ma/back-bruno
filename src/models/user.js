@@ -1,31 +1,27 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
-let userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true },
-  cpf: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  cpf: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 });
 
-// Antes de salvar, transformar a senha em hash
-userSchema.pre('save', function (next) {
-  if (this.isNew || this.isModified('password')) {
-    bcrypt.hash(this.password, 10, (err, hashedPassword) => {
-      if (err) next(err);
-      else {
-        this.password = hashedPassword;
-        next();
-      }
-    });
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
   }
 });
 
 userSchema.methods.isCorrectPassword = function (password, callback) {
-  bcrypt.compare(password, this.password, (err, same) => {
-    if (err) callback(err);
-    else callback(null, same);
-  });
+  bcrypt.compare(password, this.password, callback);
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

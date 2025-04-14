@@ -1,25 +1,31 @@
-const Pizza = require('../models/pizza');
+const Pizza = require("../models/pizza");
 
 const getPizzas = async (req, res) => {
-  const pizzas = await Pizza.find();
-  res.json(pizzas);
+  try {
+    const pizzas = await Pizza.find();
+    res.status(200).json(pizzas);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar pizzas" });
+  }
 };
 
 const createPizza = async (req, res) => {
   const { name, description, price } = req.body;
 
-  const newPizza = new Pizza({
-    name,
-    description,
-    price,
-  });
+  if (!name || !price) {
+    return res.status(400).json({ error: "Nome e preço são obrigatórios" });
+  }
 
-  await newPizza.save();
-
-  res.json({
-    message: 'New Pizza created',
-    newPizza,
-  });
+  try {
+    const newPizza = new Pizza({ name, description, price });
+    await newPizza.save();
+    res.status(201).json({
+      message: "Pizza criada com sucesso",
+      pizza: newPizza,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao criar pizza" });
+  }
 };
 
 module.exports = { getPizzas, createPizza };
