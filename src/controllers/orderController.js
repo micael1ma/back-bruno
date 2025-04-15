@@ -75,22 +75,28 @@ const searchBySummary = async (req, res) => {
 
 const getAllSummaries = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id })
-      .select("summary -_id")
-      .sort({ createdAt: -1 });
+    const orders = await Order.find()
+      .select("summary createdAt -_id")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.json({
-      success: true,
-      count: orders.length,
-      summaries: orders.map((order) => order.summary),
+    if (!orders.length) {
+      return res.type("text/plain").send("Nenhum pedido registrado no sistema");
+    }
+
+    let result = "Os pedidos que já foram feitos são:\n\n";
+
+    orders.forEach((order, index) => {
+      const orderNumber = orders.length - index;
+      const date = new Date(order.createdAt).toLocaleString("pt-BR");
+
+      result += `* **Pedido ${orderNumber} - ${date}:** ${order.summary}\n`;
     });
+
+    res.type("text/plain").send(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Erro ao buscar resumos",
-      details:
-        process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    console.error("Erro ao buscar pedidos:", error);
+    res.status(500).type("text/plain").send("Erro interno ao gerar relatório");
   }
 };
 
