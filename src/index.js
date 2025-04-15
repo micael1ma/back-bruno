@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const authRouter = require('./routes/authRouter');
 const pizzaRouter = require('./routes/pizzaRouter');
 const orderRouter = require('./routes/orderRouter');
+const aiRouter = require('./routes/aiRouter');
 
 const db = require('./database/db');
 
@@ -13,7 +14,7 @@ const { WebSocketServer, WebSocket } = require('ws');
 const app = express();
 const server = createServer(app);
 const ws = new WebSocketServer({ server });
-
+//oiiiii
 const clients = new Set();
 
 ws.on('connection', (client) => {
@@ -46,6 +47,7 @@ app.use(bodyParser.json());
 app.use('/api', authRouter);
 app.use('/api', pizzaRouter);
 app.use('/api', orderRouter);
+app.use('/api', aiRouter);
 
 const port = 3000;
 server.listen(port, () => {
