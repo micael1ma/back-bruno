@@ -14,16 +14,21 @@ const { WebSocketServer, WebSocket } = require('ws');
 const app = express();
 const server = createServer(app);
 const ws = new WebSocketServer({ server });
-//oiiiii
 const clients = new Set();
 
 ws.on('connection', (client) => {
   clients.add(client);
+  console.log('Cliente adicionado');
 
   client.on('message', (message) => {
     try {
       const parsedMessage = JSON.parse(message);
-      console.log('Raw data received:', parsedMessage, 'Type:', typeof parsedMessage);
+      console.log(
+        'Raw data received:',
+        parsedMessage,
+        'Type:',
+        typeof parsedMessage,
+      );
 
       for (let c of clients) {
         if (c.readyState === WebSocket.OPEN) {
